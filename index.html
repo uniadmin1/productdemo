@@ -3,18 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNI - The Real-World Operating System</title>
+    <title>UNI - Investor Access</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-blue: #0066ff;
-            --secondary-blue: #00ccff;
-            --dark-blue: #003366;
-            --background: #0a0a0a;
-            --text-primary: #ffffff;
-            --text-secondary: rgba(255, 255, 255, 0.8);
-            --text-muted: rgba(255, 255, 255, 0.7);
-            --glass-bg: rgba(0, 50, 255, 0.05);
-            --border-color: rgba(0, 100, 255, 0.1);
+            --primary-blue: #00aaff;
+            --dark-bg: #0a0a0a;
+            --dark-card: #101010;
+            --glow-color: rgba(0, 170, 255, 0.5);
+            --border-color: rgba(0, 170, 255, 0.2);
             --nav-height: 70px;
         }
 
@@ -25,1356 +24,587 @@
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--background);
-            color: var(--text-primary);
-            line-height: 1.6;
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--dark-bg);
+            color: #e0e0e0;
             overflow-x: hidden;
         }
 
-        /* Base Components */
-        .glass {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
+        /* --- PASSWORD GATE STYLES --- */
+        #password-gate {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: var(--dark-bg);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease-out;
+        }
+        #password-gate.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .gate-container {
+            width: 90%;
+            max-width: 500px;
+            padding: 40px;
+            text-align: center;
+            background: rgba(16, 16, 16, 0.5);
+            backdrop-filter: blur(10px);
             border: 1px solid var(--border-color);
             border-radius: 16px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.5);
         }
-
-        .gradient-text {
-            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .gate-container h1 {
+            font-size: 2rem;
+            color: var(--primary-blue);
+            margin-bottom: 15px;
         }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 25px;
-            text-decoration: none;
+        .gate-container p {
+            color: #a0a0a0;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        #password-input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 20px;
+            background-color: rgba(0,0,0,0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+            text-align: center;
+        }
+        #password-input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 15px var(--glow-color);
+        }
+        .gate-button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            background: linear-gradient(45deg, var(--primary-blue), #0077b6);
+            color: #fff;
             font-weight: 600;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 10px 25px rgba(0, 102, 255, 0.3);
-            display: inline-block;
+        }
+        .gate-button:hover {
+            box-shadow: 0 0 20px var(--glow-color);
+        }
+        #error-message {
+            color: #ff4d4d;
+            margin-top: 15px;
+            height: 20px;
+            visibility: hidden;
+        }
+        .gate-container.shake {
+            animation: shake 0.5s ease-in-out;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+            20%, 40%, 60%, 80% { transform: translateX(10px); }
         }
 
-        .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 35px rgba(0, 204, 255, 0.4);
+        /* --- MAIN CONTENT --- */
+        #main-content {
+            visibility: hidden; 
+            opacity: 0;
+            transition: opacity 0.5s ease-in;
         }
-
-        /* Background Animation */
-        .bg-animation {
+        #main-content.visible {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        /* --- NAVIGATION BAR --- */
+        .main-nav {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            height: 100%;
-            z-index: -1;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(0, 100, 255, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(0, 150, 255, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 40% 80%, rgba(30, 144, 255, 0.1) 0%, transparent 50%);
-            animation: float 20s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(1deg); }
-        }
-
-        /* Navigation */
-        .navbar {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            z-index: 1000;
-            padding: 15px 50px;
-            background: rgba(10, 10, 10, 0.9);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border-color);
             height: var(--nav-height);
+            z-index: 1000;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
         }
-
         .nav-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            max-width: 1400px;
+            width: 100%;
+            max-width: 1200px;
             margin: 0 auto;
-            height: 100%;
+            padding: 0 20px;
         }
-
-        .logo {
-            font-size: 32px;
+        .nav-logo {
+            font-size: 2rem;
             font-weight: 900;
-            letter-spacing: -2px;
+            color: #fff;
         }
-
         .nav-links {
             display: flex;
-            gap: 40px;
+            align-items: center;
+            gap: 30px;
             list-style: none;
         }
-
         .nav-links a {
-            color: var(--text-secondary);
+            color: #a0a0a0;
             text-decoration: none;
             font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        .nav-links a:hover {
+            color: #fff;
+        }
+        .nav-button {
+            background: var(--primary-blue);
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
             transition: all 0.3s ease;
         }
-
-        .nav-links a:hover {
-            color: var(--secondary-blue);
+        .nav-button:hover {
+            color: #fff;
+            box-shadow: 0 0 15px var(--glow-color);
             transform: translateY(-2px);
         }
 
-        /* Hero Section */
-        .hero {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: var(--nav-height) 50px 0;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(0, 100, 255, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(0, 150, 255, 0.08) 0%, transparent 50%),
-                radial-gradient(circle at 40% 80%, rgba(30, 144, 255, 0.12) 0%, transparent 50%),
-                linear-gradient(135deg, #0a0a0a 0%, #0d1117 50%, #0a0a0a 100%);
-            position: relative;
-        }
-
-        .hero-container {
-            max-width: 1000px;
-            margin: 0 auto;
-            text-align: center;
-        }
-
-        .hero h1 {
-            font-size: clamp(3.5rem, 10vw, 6rem);
-            font-weight: 900;
-            line-height: 1.1;
-            margin-bottom: 24px;
-            background: linear-gradient(135deg, #ffffff 0%, var(--secondary-blue) 50%, var(--primary-blue) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: -3px;
-        }
-
-        .hero .tagline {
-            font-size: 28px;
-            color: var(--secondary-blue);
-            margin-bottom: 32px;
-            font-weight: 400;
-        }
-
-        .hero .description {
-            font-size: 20px;
-            color: var(--text-secondary);
-            margin-bottom: 50px;
-            line-height: 1.7;
-            max-width: 900px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        /* Data Flow */
-        .data-flow {
-            margin-top: 50px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .flow-step {
-            padding: 2rem;
-            border-radius: 15px;
-            background: linear-gradient(145deg, #001122 0%, var(--dark-blue) 100%);
-            border: 2px solid var(--secondary-blue);
-            box-shadow: 0 10px 30px rgba(0, 204, 255, 0.3);
-            transition: all 0.3s ease;
-            margin: 1rem 0;
-        }
-
-        .flow-step:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 20px 50px rgba(0, 204, 255, 0.5);
-        }
-
-        .flow-header {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 0.75rem;
-        }
-
-        .flow-emoji {
-            font-size: 1.5rem;
-        }
-
-        .flow-step h4 {
-            margin: 0;
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--secondary-blue);
-        }
-
-        .flow-step p {
-            margin: 0 0 1rem 0;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            line-height: 1.5;
-        }
-
-        /* Partner Logos */
-        .partner-logos {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-            align-items: center;
-            margin-top: 1rem;
-        }
-
-        .partner-logo {
-            width: 32px;
-            height: 32px;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            transition: all 0.3s ease;
-            filter: brightness(1.2);
-        }
-
-        .partner-logo:hover {
-            transform: scale(1.1);
-            filter: brightness(1.5) drop-shadow(0 0 8px rgba(0, 204, 255, 0.6));
-        }
-
-        .partner-logo.google {
-            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%234285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="%2334A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="%23FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="%23EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>');
-        }
-
-        .partner-logo.ticketmaster {
-            background-image: url('https://i.imgur.com/11lWIdv.png');
-            width: 32px;
-            height: 32px;
-        }
-
-        .partner-logo.yelp {
-            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23FF1A1A"><path d="M12.4 2.5c-.8-.1-1.6.5-1.7 1.3L10.2 8c-.1.6.3 1.1.9 1.2.6.1 1.1-.3 1.2-.9l.5-4.2c.1-.8-.5-1.5-1.3-1.6z"/><path d="M8.8 4.1c-.7-.4-1.5-.1-1.9.6L5.1 8.3c-.3.5-.1 1.2.4 1.5.5.3 1.2.1 1.5-.4l1.8-3.6c.4-.7.1-1.5-.6-1.9z"/></svg>');
-        }
-
-        .partner-logo.opentable {
-            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23DA3743"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-size="8" font-weight="bold" fill="white">OT</text></svg>');
-        }
-
-        .flow-arrow {
-            text-align: center;
-            font-size: 2rem;
-            color: var(--secondary-blue);
-            margin: 1rem 0;
-            animation: bounce 2s infinite;
-        }
-
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
-        }
-
-        /* Section Styling */
-        .section {
-            padding: 100px 50px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .section h2 {
-            font-size: 3rem;
-            font-weight: 800;
-            margin-bottom: 60px;
-            text-align: center;
-            background: linear-gradient(135deg, #ffffff 0%, var(--secondary-blue) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .section-description {
-            text-align: center;
-            font-size: 18px;
-            color: var(--text-secondary);
-            margin-bottom: 60px;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        /* Grid Layouts */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 25px;
-        }
-
-        .grid-2 {
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        }
-
-        .grid-3 {
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        }
-
-        /* Cards */
-        .card {
-            padding: 30px;
-            border-radius: 15px;
-            background: var(--glass-bg);
-            border: 1px solid var(--border-color);
-            transition: all 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-10px);
-            background: rgba(0, 100, 255, 0.08);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .metric-card::before {
-            content: '';
-            position: absolute;
+        /* --- ALL PREVIOUS STYLES --- */
+        .background-animation {
+            position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary-blue), var(--secondary-blue));
-            transform: scaleX(0);
-            transition: transform 0.4s ease;
-        }
-
-        .metric-card {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .metric-card:hover::before {
-            transform: scaleX(1);
-        }
-
-        .card-title {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            color: var(--secondary-blue);
-        }
-
-        .card-value {
-            font-size: 28px;
-            font-weight: 900;
-            color: var(--text-primary);
-            margin-bottom: 8px;
-        }
-
-        .card-description {
-            color: var(--text-muted);
-            font-size: 13px;
-        }
-
-        /* Partner Logos */
-        .partner-logos {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-            align-items: center;
-            margin-top: 1rem;
-        }
-
-        .partner-logo {
-            width: 32px;
-            height: 32px;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            transition: all 0.3s ease;
-            filter: brightness(1.2);
-        }
-
-        .partner-logo:hover {
-            transform: scale(1.1);
-            filter: brightness(1.5) drop-shadow(0 0 8px rgba(0, 204, 255, 0.6));
-        }
-
-        .partner-logo.google {
-            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%234285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="%2334A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="%23FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="%23EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>');
-        }
-
-        .partner-logo.ticketmaster {
-            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30"><rect x="15" y="6" width="70" height="18" rx="4" fill="%23026CDF"/><text x="50" y="18" text-anchor="middle" font-family="Arial,sans-serif" font-size="8" font-weight="bold" fill="white">ticketmaster</text></svg>');
-        }
-
-        .partner-logo.yelp {
-            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23FF1A1A"><path d="M12.4 2.5c-.8-.1-1.6.5-1.7 1.3L10.2 8c-.1.6.3 1.1.9 1.2.6.1 1.1-.3 1.2-.9l.5-4.2c.1-.8-.5-1.5-1.3-1.6z"/><path d="M8.8 4.1c-.7-.4-1.5-.1-1.9.6L5.1 8.3c-.3.5-.1 1.2.4 1.5.5.3 1.2.1 1.5-.4l1.8-3.6c.4-.7.1-1.5-.6-1.9z"/></svg>');
-        }
-
-        .partner-logo.opentable {
-            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23DA3743"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-size="8" font-weight="bold" fill="white">OT</text></svg>');
-        }
-
-        /* Company Logos */
-        .company-logo {
-            width: 40px;
-            height: 40px;
-            margin: 0 auto 15px auto;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-        }
-
-        .logo-apple { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ffffff"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>'); }
-        .logo-google { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%234285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="%2334A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="%23FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="%23EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>'); }
-        .logo-meta { background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%231877F2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>'); }
-
-        /* Comparison Cards */
-        .comparison-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border-color);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .comparison-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(0, 150, 255, 0.05) 0%, transparent 70%);
-            animation: float 20s ease-in-out infinite;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(45deg, var(--dark-bg) 0%, #001f3f 50%, var(--dark-bg) 100%);
+            background-size: 400% 400%;
+            animation: gradient-flow 15s ease-in-out infinite;
             z-index: -1;
         }
 
-        .comparison-card::after {
+        @keyframes gradient-flow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .section {
+            padding: 100px 0;
+            position: relative;
+        }
+        
+        .section::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, rgba(0, 100, 255, 0.02) 0%, rgba(0, 50, 255, 0.05) 50%, rgba(0, 150, 255, 0.02) 100%);
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
             z-index: -1;
+            opacity: 0.5;
         }
 
-        .uni-card {
-            border: 2px solid var(--secondary-blue);
-            background: linear-gradient(145deg, rgba(0, 100, 255, 0.08), rgba(0, 50, 100, 0.04));
-            backdrop-filter: blur(25px);
-            box-shadow: 0 10px 40px rgba(0, 204, 255, 0.15);
-        }
 
-        .uni-card::before {
-            background: radial-gradient(circle, rgba(0, 204, 255, 0.1) 0%, transparent 60%);
-        }
-
-        .uni-card::after {
-            background: linear-gradient(135deg, rgba(0, 204, 255, 0.05) 0%, rgba(0, 100, 255, 0.08) 50%, rgba(0, 150, 255, 0.03) 100%);
-        }
-
-        .company-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--secondary-blue);
-            margin-bottom: 8px;
+        .hero {
+            min-height: 100vh;
             display: flex;
             align-items: center;
-            gap: 10px;
-            justify-content: space-between;
+            text-align: center;
+            padding-top: var(--nav-height); /* Added padding for fixed nav */
         }
 
-        .company-ticker {
-            font-size: 14px;
-            font-weight: 600;
-            background: rgba(0, 100, 255, 0.1);
-            color: var(--secondary-blue);
-            padding: 4px 8px;
-            border-radius: 6px;
-            border: 1px solid rgba(0, 100, 255, 0.2);
-        }
-
-        .company-valuation {
-            font-size: 20px;
+        .hero h1 {
+            font-size: clamp(3rem, 8vw, 6rem);
             font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: -2px;
+            background: linear-gradient(45deg, #fff, var(--primary-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+
+        .hero p {
+            font-size: clamp(1rem, 3vw, 1.5rem);
+            color: #a0a0a0;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 100px;
+            align-items: center;
+        }
+
+        @media (min-width: 768px) {
+            .feature-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .feature-grid.reversed .content {
+                order: 2;
+            }
+        }
+
+        .content h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
             color: var(--primary-blue);
             margin-bottom: 20px;
-            text-align: center;
-            padding: 8px 16px;
-            background: linear-gradient(135deg, rgba(0, 100, 255, 0.1), rgba(0, 204, 255, 0.05));
-            border-radius: 10px;
-            border: 1px solid rgba(0, 100, 255, 0.2);
         }
 
-        .company-icon {
-            font-size: 28px;
+        .content p, .content ul {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #b0b0b0;
+            margin-bottom: 15px;
+        }
+        
+        .content ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .content li {
+            padding-left: 25px;
+            position: relative;
         }
 
-        .metric-section {
-            margin-bottom: 20px;
-        }
-
-        .metric-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .metric-icon {
-            font-size: 18px;
-            color: var(--secondary-blue);
-        }
-
-        .metric-description {
-            font-size: 14px;
-            color: var(--text-secondary);
-            line-height: 1.5;
-        }
-
-        .scores-section {
-            margin-top: 25px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(0, 100, 255, 0.2);
-        }
-
-        .score-item {
-            margin-bottom: 16px;
-        }
-
-        .score-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
-        }
-
-        .score-label {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--secondary-blue);
-        }
-
-        .score-value {
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-
-        .score-bar {
-            width: 100%;
-            height: 6px;
-            background: rgba(50, 50, 50, 0.8);
-            border-radius: 3px;
-            overflow: hidden;
-            margin-bottom: 6px;
-        }
-
-        .score-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary-blue), var(--secondary-blue));
-            border-radius: 3px;
-            transition: width 0.8s ease;
-            box-shadow: 0 0 10px rgba(0, 204, 255, 0.5);
-        }
-
-        .score-desc {
-            font-size: 11px;
-            color: var(--text-muted);
-            margin: 0;
-        }
-
-        .comparison-card:hover {
-            transform: translateY(-8px);
-            border-color: var(--secondary-blue);
-            box-shadow: 0 25px 50px rgba(0, 204, 255, 0.2);
-            backdrop-filter: blur(30px);
-        }
-
-        .uni-card:hover {
-            box-shadow: 0 30px 60px rgba(0, 204, 255, 0.3);
-            transform: translateY(-12px) scale(1.01);
-            border-color: var(--primary-blue);
-        }
-
-        .uni-card:hover::before {
-            background: radial-gradient(circle, rgba(0, 204, 255, 0.15) 0%, transparent 50%);
-        }
-
-        /* Contact Section */
-        .contact-section {
-            text-align: center;
-            padding: 100px 50px;
-            background: rgba(0, 50, 255, 0.02);
-            margin-top: 100px;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .contact-card {
-            max-width: 700px;
-            margin: 0 auto;
-            padding: 50px;
-            background: var(--glass-bg);
-            border-radius: 20px;
-            border: 1px solid var(--border-color);
-        }
-
-        .contact-links {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            margin-top: 30px;
-            flex-wrap: wrap;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .navbar, .section, .hero {
-                padding-left: 25px;
-                padding-right: 25px;
-            }
-            
-            .nav-links {
-                display: none;
-            }
-            
-            .grid, .grid-2, .grid-3 {
-                grid-template-columns: 1fr;
-            }
-
-            .contact-links {
-                flex-direction: column;
-                align-items: center;
-            }
-        }
-
-        /* Password Protection Styles */
-        .password-overlay {
-            position: fixed;
-            top: 0;
+        .content li::before {
+            content: '✓';
+            color: var(--primary-blue);
+            position: absolute;
             left: 0;
+        }
+
+        .video-container {
+            position: relative;
             width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #0a0a0a 0%, #0d1117 50%, #0a0a0a 100%);
+            aspect-ratio: 9 / 16;
+            background-color: #000;
+            border-radius: 12px;
+            border: 2px solid rgba(0, 170, 255, 0.3);
+            box-shadow: 0 0 30px var(--glow-color);
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 10000;
+            overflow: hidden; 
+        }
+        
+        .video-container iframe {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            border: none;
+            transform: translate(-50%, -50%) scale(1.15); 
         }
 
-        .password-container {
-            text-align: center;
-            padding: 60px 40px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            max-width: 400px;
-            width: 90%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        .video-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .roadmap-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 60px;
         }
 
-        .password-logo {
-            font-size: 48px;
-            font-weight: 900;
-            letter-spacing: -2px;
-            margin-bottom: 20px;
+        .roadmap-card {
+            background-color: var(--dark-card);
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .password-title {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--text-primary);
+        .roadmap-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .roadmap-card .icon {
+            font-size: 2.5rem;
+            color: var(--primary-blue);
+            margin-bottom: 15px;
+        }
+
+        .roadmap-card h3 {
+            font-size: 1.5rem;
+            color: #fff;
             margin-bottom: 10px;
         }
 
-        .password-subtitle {
-            font-size: 16px;
-            color: var(--text-secondary);
-            margin-bottom: 30px;
+        .roadmap-card p {
+            color: #b0b0b0;
+            line-height: 1.6;
         }
-
-        .password-form {
-            margin-bottom: 20px;
-        }
-
-        .password-input {
-            width: 100%;
-            padding: 15px 20px;
-            font-size: 16px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            color: var(--text-primary);
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
-            outline: none;
-        }
-
-        .password-input:focus {
-            border-color: var(--secondary-blue);
-            box-shadow: 0 0 20px rgba(0, 204, 255, 0.2);
-        }
-
-        .password-input::placeholder {
-            color: var(--text-muted);
-        }
-
-        .password-btn {
-            width: 100%;
-            padding: 15px 20px;
-            font-size: 16px;
-            font-weight: 600;
-            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 25px rgba(0, 102, 255, 0.3);
-        }
-
-        .password-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 35px rgba(0, 204, 255, 0.4);
-        }
-
-        .password-error {
-            color: #ff4444;
-            font-size: 14px;
-            margin-top: 10px;
-            display: none;
-        }
-
-        .main-content {
-            width: 100%;
-            height: 100%;
-        }
-        .fade-in {
+        
+        .reveal {
             opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.8s ease;
+            transform: translateY(50px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
         }
-
-        .fade-in.visible {
+        .reveal.visible {
             opacity: 1;
             transform: translateY(0);
+        }
+
+        .cta-button {
+            display: inline-block;
+            margin-top: 40px;
+            background: linear-gradient(45deg, var(--primary-blue), #0077b6);
+            color: #fff;
+            padding: 15px 35px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            box-shadow: 0 5px 20px rgba(0, 170, 255, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 170, 255, 0.6);
+        }
+
+        footer h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Password Protection Overlay -->
-    <div id="passwordOverlay" class="password-overlay">
-        <div class="password-container">
-            <div class="password-logo gradient-text">UNI</div>
-            <h2 class="password-title">Investor Access</h2>
-            <p class="password-subtitle">Enter password to view confidential materials</p>
-            <div class="password-form">
-                <input 
-                    type="password" 
-                    id="passwordInput" 
-                    class="password-input" 
-                    placeholder="Password"
-                    autocomplete="off"
-                >
-                <button onclick="checkPassword()" class="password-btn">
-                    Access Deck
-                </button>
-            </div>
-            <div id="passwordError" class="password-error"></div>
+
+    <div id="password-gate">
+        <div class="gate-container">
+            <h1>Investor Access Only</h1>
+            <p>This deck outlines the future of culture and commerce. Got the code? You’re in.</p>
+            <form id="gate-form">
+                <input type="password" id="password-input" placeholder="Enter Password">
+                <button type="submit" class="gate-button">Unlock</button>
+            </form>
+            <p id="error-message">Incorrect Password. Please try again.</p>
         </div>
     </div>
 
-    <!-- Main Site Content (Initially Hidden) -->
-    <div id="mainContent" class="main-content" style="display: none;">
-        <div class="bg-animation"></div>
-    
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="logo gradient-text">UNI</div>
-            <ul class="nav-links">
-                <li><a href="#about">What We Are</a></li>
-                <li><a href="#metrics">Metrics</a></li>
-                <li><a href="#revenue">Revenue</a></li>
-                <li><a href="#investors">Investors</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
-            <a href="#contact" class="btn-primary">Get Started</a>
-        </div>
-    </nav>
+    <div id="main-content">
+        <nav class="main-nav">
+            <div class="nav-container">
+                <div class="nav-logo">UNI</div>
+                <ul class="nav-links">
+                    <li><a href="http://www.socialdna.xyz" target="_blank">B2B Demo</a></li>
+                    <li><a href="https://vast-softball-006.notion.site/UNI-Team-2172d30bfaf580b2bb1dd5f13c6a8e4c?source=copy_link">Team</a></li>
+                    <li><a href="https://calendly.com/isaiah-gouni/30min" target="_blank" class="nav-button">Schedule a Call</a></li>
+                </ul>
+            </div>
+        </nav>
 
-    <section class="hero">
-        <div class="hero-container">
-            <h1>The Real-World Operating System</h1>
-            <p class="tagline">The missing infrastructure layer for the $12 trillion experience economy</p>
-            <p class="description">
-               UNI maps your city's entire social scene — tailored to your mood & lifestyle — from restaurants to concerts to nightlife, creating the richest real-world behavioral data pipeline on Earth.
-            </p>
-            
-            <div class="data-flow">
-                <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--secondary-blue);">How It Works</h3>
-                
-                <div class="flow-step">
-                    <div class="flow-header">
-                        <span class="flow-emoji">🌐</span>
-                        <h4>Mass Aggregation</h4>
+        <div class="background-animation"></div>
+
+        <header class="hero section">
+            <div class="container reveal">
+                <h1>The Real-World Operating System.</h1>
+                <p>We're building the intelligent infrastructure that connects every physical experience, venue, and social interaction into one unified platform. This is not another app. This is the new reality.</p>
+                <a href="https://calendly.com/isaiah-gouni/30min" target="_blank" class="cta-button">Schedule a Call with the CEO</a>
+            </div>
+        </header>
+
+        <main>
+            <section id="interactive-map" class="section">
+                <div class="container feature-grid">
+                    <div class="content reveal">
+                        <h2>The City At Your Fingertips</h2>
+                        <p>Every “blip” on the map is a live gateway to the city's pulse. Each point is fully interactable, opening into a dynamic profile card with everything you need to know.</p>
+                        <ul>
+                            <li>Real-time hours, tags, and venue info.</li>
+                            <li>Instant RSVP and booking capabilities.</li>
+                            <li>V2 will feature dynamic images from Foursquare and partner venues.</li>
+                        </ul>
                     </div>
-                    <p>UNI syncs with platforms like Google, Yelp, Ticketmaster, and OpenTable to centralize every live event, experience, and venue into one intelligent system, updated in real time. For the first time, a city's entire social landscape runs through one ultra-powerful platform.</p>
-                </div>
-                
-                <div class="flow-arrow">⬇</div>
-                
-                <div class="flow-step">
-                    <div class="flow-header">
-                        <span class="flow-emoji">🧠</span>
-                        <h4>AI Filtering</h4>
-                    </div>
-                    <p>UNI's Experience Engine filters everything you could do — ranking it by your mood, context, and timing. It also gives you an AI search tool to instantly generate personalized plans or find hyper-specific experiences.</p>
-                </div>
-                
-                <div class="flow-arrow">⬇</div>
-                
-                <div class="flow-step">
-                    <div class="flow-header">
-                        <span class="flow-emoji">🤝</span>
-                        <h4>Social Connection</h4>
-                    </div>
-                    <p>Users connect with friends and compatible matches to discover and experience the real world together.</p>
-                </div>
-                
-                <div class="flow-arrow">⬇</div>
-                
-                <div class="flow-step">
-                    <div class="flow-header">
-                        <span class="flow-emoji">🧬</span>
-                        <h4>Social DNA</h4>
-                    </div>
-                    <p>Every profile combines with behavior patterns to create rich, first-party data without surveillance or tracking.</p>
-                </div>
-                
-                <div class="flow-arrow">⬇</div>
-                
-                <div class="flow-step">
-                    <div class="flow-header">
-                        <span class="flow-emoji">💼</span>
-                        <h4>B2B Engine</h4>
-                    </div>
-                    <p>Enables brands and venues to access insights, targeting tools, and monetized exposure from real-world social flow.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="about" class="section">
-        <h2>Every Action is Monetizable</h2>
-        <p class="section-description">
-            Every check-in, RSVP, recommendation, and connection generates behavioral data that makes the system smarter and our moat deeper. No cookies. No surveillance. Just opt-in real-world DNA that becomes more valuable with every interaction.
-        </p>
-    </section>
-
-    <section id="metrics" class="section">
-        <h2>📊 Early Signals (Pre-Revenue Traction)</h2>
-        <div class="grid grid-3">
-            <div class="card metric-card fade-in">
-                <div class="card-title">Pre-Launch Pandemonium </div>
-                <div class="card-value">13K+</div>
-                <div class="card-description">Instagram followers + 4.6K waitlist signups with <$1.50 CAC</div>
-            </div>
-            <div class="card metric-card fade-in">
-                <div class="card-title">Viral Growth Hacking</div>
-                <div class="card-value">Just $10K in Adspend...</div>
-                <div class="card-description">Over 1M impressions have driven a fast-growing funnel of highly engaged future users — many expressing support beyond signups. Our traction has also attracted inbound interest from brands like Live Nation, Interscope, and Arena Stage.</div>
-            </div>
-            <div class="card metric-card fade-in">
-                <div class="card-title">Products Fully Built Pre-Raise</div>
-                <div class="card-value">B2B & B2C</div>
-                <div class="card-description">IOS beta deployed to Testflight for private testing. B2B SaaS for social DNA search live as well.</div>
-            </div>
-            <div class="card metric-card fade-in">
-                <div class="card-title">Full Scale Launch This Summer</div>
-                <div class="card-value">UNI Day</div>
-                <div class="card-description">National rollout August 29 ('Black Friday for Going Out')</div>
-            </div>
-        </div>
-    </section>
-
-    <section id="revenue" class="section">
-        <h2>💸 The Stripe for Physical Experiences</h2>
-        <p class="section-description">
-            Every real-world transaction flows through UNI. We take a cut of the $12 trillion that happens offline.
-        </p>
-        
-        <div class="grid grid-2">
-            <div class="card fade-in">
-                <div class="card-title">API Commission Revenue</div>
-                <p>Ticketmaster, AirBnb, Uber, Opentable, etc. integrations (2-8% per transaction)</p>
-            </div>
-            <div class="card fade-in">
-                <div class="card-title">UNI Platinum Subscriptions</div>
-                <p>$19.99-49.99/mo for status, line skips, increased Encore Coins, and premium AI usage</p>
-            </div>
-            <div class="card fade-in">
-                <div class="card-title">Encore Coin Economy</div>
-                <p>In-app currency with real-world redemption partnerships</p>
-            </div>
-            <div class="card fade-in">
-                <div class="card-title">Enterprise Behavioral Intelligence</div>
-                <p> Social DNA reports  for brands, venues, and advertisers ($3K per report) </p>
-            </div>
-            <div class="card fade-in">
-                <div class="card-title">Venue Infrastructure Fees</div>
-                <p>$10K per month AI-Powered Enterprise SaaS for Social DNA Search </p>
-            </div>
-            <div class="card fade-in">
-                <div class="card-title">Connective Advertising</div>
-                <p>$2K-25K per campaign Unmatched hyper-precise targeting based on Social DNA & user intent</p>
-            </div>
-        </div>
-        
-        <div class="grid grid-3" style="margin-top: 80px;">
-            <div class="card metric-card fade-in">
-                <div class="card-title">2025-2026 Revenue</div>
-                <div class="card-value">$5M-$15M</div>
-                <div class="card-description">Annual Recurring Revenue (conservative estimate)</div>
-            </div>
-            <div class="card metric-card fade-in">
-                <div class="card-title">Target Exit Valuation</div>
-                <div class="card-value">$1B-$3B</div>
-                <div class="card-description">Within 36 months</div>
-            </div>
-            <div class="card metric-card fade-in">
-                <div class="card-title">ROI Potential</div>
-                <div class="card-value">100x-300x</div>
-                <div class="card-description">Returns at current $10M valuation</div>
-            </div>
-
-             <div style="text-align: center; margin-top: 50px;">
-            <a href="https://econchart-ca1r.vercel.app/" target="_blank" class="btn-primary" style="font-size: 18px; padding: 15px 30px;">
-                📊 Try our Revenue Simulator
-            </a>
-        </div>
-    </section>
-        </div>
-    </section>
-
-    <section id="investors" class="section">
-        <h2>🧠 Why LIKELY Big Tech Won’t Build UNI, They’ll Acquire Us</h2>
-        <p class="section-description">
-            Big Tech’s DNA is fundamentally incompatible with UNI. Their infrastructure is optimized for screen time, not real-world movement. UNI is built to drive exploration, not scrolling, and that requires a ground-up reimagining of their product philosophy. Rebuilding that from scratch would be expensive, slow, and culturally off-brand. The more strategic, capital-efficient path is simple: acquire us before they can't...
-        </p>
-        
-        <div class="grid grid-2">
-            <div class="card fade-in">
-                <div class="company-logo logo-apple"></div>
-                <h3>Apple ($3T+ Market Cap)</h3>
-                <p><strong>What they need:</strong> The missing social layer for Maps, Wallet, and AirTags — turns hardware into lifestyle platform</p>
-                <p><strong>Why they'll pay:</strong> Real-world social graph completion. UNI makes Apple the center of your physical social life.</p>
-            </div>
-            <div class="card fade-in">
-                <div class="company-logo logo-google"></div>
-                <h3>Google ($1.7T Market Cap)</h3>
-                <p><strong>What they need:</strong> Real-world search intent signals — the only data they don't have about human behavior</p>
-                <p><strong>Why they'll pay:</strong> Complete the behavioral picture. Know where you want to go, not just where you've been.</p>
-            </div>
-            <div class="card fade-in">
-                <div class="company-logo logo-meta"></div>
-                <h3>Meta ($800B Market Cap)</h3>
-                <p><strong>What they need:</strong> IRL engagement data to feed their advertising engine — escape the metaverse trap</p>
-                <p><strong>Why they'll pay:</strong> Real-world social graph data to compete with TikTok's recommendation engine.</p>
-            </div>
-        </div>
-    </section>
-
-    <section class="section">
-        <h2>⚔️ Company Business Model Analysis</h2>
-        <p class="section-description">
-            Current solutions are fragmented, outdated, and missing the social layer. UNI is the first platform to unify discovery, social connection, and behavioral intelligence into one seamless experience.
-        </p>
-        
-        <div class="grid grid-2">
-            <!-- UNI Card -->
-            <div class="card fade-in comparison-card uni-card">
-                <h3 class="company-title">
-                    <span class="company-icon">✨</span>
-                    UNI
-                </h3>
-                
-                <div class="metric-section">
-                    <h4 class="metric-title">
-                        <span class="metric-icon">👥</span>
-                        Business Model
-                    </h4>
-                    <p class="metric-description">Real-world cultural OS + social graph. Full-stack consumer + B2B network.</p>
-                </div>
-
-                <div class="metric-section">
-                    <h4 class="metric-title">
-                        <span class="metric-icon">💰</span>
-                        Revenue Streams
-                    </h4>
-                    <p class="metric-description">Subscriptions (Plat, Elite), partner bookings, API commissions, Encore Coins, advertising, data products</p>
-                </div>
-
-                <div class="scores-section">
-                    <h4 class="metric-title">
-                        <span class="metric-icon">📊</span>
-                        Key Metrics
-                    </h4>
                     
-                    <div class="score-item">
-                        <div class="score-header">
-                            <span class="score-label">Data Value:</span>
-                            <span class="score-value">5/5</span>
-                        </div>
-                        <div class="score-bar">
-                            <div class="score-fill" style="width: 100%;"></div>
-                        </div>
-                        <p class="score-desc">Richest real-world behavioral data (social DNA)</p>
+                    <div class="video-container reveal">
+                        <iframe src="https://streamable.com/e/5xvxab?autoplay=1&muted=1&loop=1&controls=0" allow="autoplay" allowfullscreen></iframe>
                     </div>
 
-                    <div class="score-item">
-                        <div class="score-header">
-                            <span class="score-label">Virality:</span>
-                            <span class="score-value">5/5</span>
-                        </div>
-                        <div class="score-bar">
-                            <div class="score-fill" style="width: 100%;"></div>
-                        </div>
-                        <p class="score-desc">Encore Coins, quests, referrals, friend feed</p>
+                </div>
+            </section>
+
+            <section id="experience-engine" class="section">
+                <div class="container feature-grid reversed">
+                    <div class="content reveal">
+                        <h2>The Experience Engine</h2>
+                        <p>Powered by OpenAI, our engine lets you command the city with natural language. We parse your location, intent, category, and context to deliver hyper-relevant results in real time.</p>
+                        <p><strong>Coming Soon:</strong> Conversational memory, keyword highlighting, AI-crafted itinerary bundles, and smarter results trained on the Foursquare API.</p>
                     </div>
 
-                    <div class="score-item">
-                        <div class="score-header">
-                            <span class="score-label">Risk Profile:</span>
-                            <span class="score-value">5/5</span>
-                        </div>
-                        <div class="score-bar">
-                            <div class="score-fill" style="width: 100%;"></div>
-                        </div>
-                        <p class="score-desc">High upside, fast growth; minimal legacy drag</p>
+                    <div class="video-container reveal">
+                        <iframe src="https://streamable.com/e/syolsv?autoplay=1&muted=1&loop=1&controls=0" allow="autoplay" allowfullscreen></iframe>
                     </div>
                 </div>
+            </section>
+
+            <section id="social-layer" class="section">
+                <div class="container feature-grid">
+                    <div class="content reveal">
+                        <h2>The Social Layer</h2>
+                        <p><strong>Smart Guest Lists:</strong> Connect before you arrive. We surface the most compatible attendees at any event based on shared interests and Social DNA. Find your vibe, not just a crowd.</p>
+                        <p><strong>UNI Friends:</strong> A hybrid of Tinder, Find My Friends, and GroupMe. Discover new connections, manage real-life friendships on a live dashboard, and coordinate plans seamlessly.</p>
+                         <p><strong>My Plans:</strong> Your personal command center for the real world. View saved places, see your RSVPs, and create your own events with flyers, tags, and guest lists.</p>
+                    </div>
+
+                    <div class="video-container reveal">
+                        <iframe src="https://streamable.com/e/xwp5iv?autoplay=1&muted=1&loop=1&controls=0" allow="autoplay" allowfullscreen></iframe>
+                    </div>
+                </div>
+            </section>
+
+            <section id="roadmap" class="section">
+                <div class="container">
+                    <div class="content reveal" style="text-align: center; max-width: 800px; margin: 0 auto;">
+                        <h2>What’s Coming Sooner Than Later</h2>
+                        <p>The foundation is built. Now we scale reality.</p>
+                    </div>
+
+                    <div class="roadmap-grid">
+                        <div class="roadmap-card reveal">
+                            <div class="icon">👤</div>
+                            <h3>Face Authentication</h3>
+                            <p>A trust layer to eliminate bots and fake profiles. Light face verification ensures guest list authenticity and platform integrity for rewards and check-ins.</p>
+                        </div>
+                        <div class="roadmap-card reveal">
+                            <div class="icon">🔥</div>
+                            <h3>Matchmaking for Places</h3>
+                            <p>Tinder for Outside. Swipe on events, venues, and the profiles of others swiping on the same experiences. It's not dating—it's finding your crowd.</p>
+                        </div>
+                        <div class="roadmap-card reveal">
+                            <div class="icon">🛰️</div>
+                            <h3>Airmatch</h3>
+                            <p>AirDrop for people. Instantly discover and connect with compatible users in the same physical space using profile barcodes or automatic detection.</p>
+                        </div>
+                        <div class="roadmap-card reveal">
+                            <div class="icon">🤖</div>
+                            <h3>AI Travel Planning</h3>
+                            <p>Your real-life itinerary engine. Ask UNI to plan a bar crawl, a date night, or a solo weekend, and get a full plan built in seconds.</p>
+                        </div>
+                        <div class="roadmap-card reveal">
+                            <div class="icon">📸</div>
+                            <h3>UNI Stories</h3>
+                            <p>A social proof and memory system powered by real movement. Every check-in becomes a data trigger and a visual record of where the night went.</p>
+                        </div>
+                        <div class="roadmap-card reveal">
+                            <div class="icon">📂</div>
+                            <h3>Curated Folder Marketplace</h3>
+                            <p>A monetizable system for users and influencers to create, share, and sell custom "event playlists" and city guides, driving community-led curation.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <footer class="section" style="text-align: center;">
+            <div class="container reveal">
+                <h2>Ready to Build the Future?</h2>
+                <p style="max-width: 600px; margin: 20px auto 40px; color: #a0a0a0;">Let's connect and discuss how UNI will become the definitive operating system for the real world.</p>
+                <a href="https://calendly.com/isaiah-gouni/30min" target="_blank" class="cta-button">Schedule a 30-Minute Call</a>
             </div>
-
-            <!-- Eventbrite Card -->
-            <div class="card fade-in comparison-card">
-                <h3 class="company-title">
-                    <span class="company-icon">🎫</span>
-                    Eventbrite
-                    <span class="company-ticker">NYSE:EB</span>
-                </h3>
-                <div class="company-valuation">Market Cap:$240M</div>
-                
-                <div class="metric-section">
-                    <h4 class="metric-title">
-                        <span class="metric-icon">👥</span>
-                        Business Model
-                    </h4>
-                    <p class="metric-description">Event ticketing marketplace; primarily B2B self-serve for hosts.</p>
-                </div>
-
-                <div class="metric-section">
-                    <h4 class="metric-title">
-                        <span class="metric-icon">💰</span>
-                        Revenue Streams
-                    </h4>
-                    <p class="metric-description">Ticket fees, payment processing, ads (minor)</p>
-                </div>
-
-                <div class="scores-section">
-                    <h4 class="metric-title">
-                        <span class="metric-icon">📊</span>
-                        Key Metrics
-                    </h4>
-                    
-                    <div class="score-item">
-                        <div class="score-header">
-                            <span class="score-label">Data Value:</span>
-                            <span class="score-value">2/5</span>
-                        </div>
-                        <div class="score-bar">
-                            <div class="score-fill" style="width: 40%;"></div>
-                        </div>
-                        <p class="score-desc">Basic transactional data</p>
-                    </div>
-
-                    <div class="score-item">
-                        <div class="score-header">
-                            <span class="score-label">Virality:</span>
-                            <span class="score-value">1/5</span>
-                        </div>
-                        <div class="score-bar">
-                            <div class="score-fill" style="width: 20%;"></div>
-                        </div>
-                        <p class="score-desc">Minimal</p>
-                    </div>
-
-                    <div class="score-item">
-                        <div class="score-header">
-                            <span class="score-label">Risk Profile:</span>
-                            <span class="score-value">2/5</span>
-                        </div>
-                        <div class="score-bar">
-                            <div class="score-fill" style="width: 40%;"></div>
-                        </div>
-                        <p class="score-desc">Plateaued growth, not Gen Z-native</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Meetup Card -->
-            <div class="card fade-in comparison-card">
-                <h3 class="company-title">
-                    <span class="company-icon">👥</span>
-                    Meetup
-                </h3>
-                
-                <div class="metric-section">
-                    <h4 class="metric-title">
-                        <span class="metric-icon">👥</span>
-                        Business Model
-                    </h4>
-                    <p class="metric-description">Niche community platform for in-person group creation.</p>
-                </div>
-
-                <div class="metric-section">
-                    <h4 class="metric-title">
-                        <span class="metric-icon">💰</span>
-                        Revenue Streams
-                    </h4>
-                    <p class="metric-description">Subscription for organizers, minimal B2B</p>
-                </div>
-
-                <div class="scores-section">
-                    <h4 class="metric-title">
-                        <span class="metric-icon">📊</span>
-                        Key Metrics
-                    </h4>
-                    
-                    <div class="score-item">
-                        <div class="score-header">
-                            <span class="score-label">Data Value:</span>
-                            <span class="score-value">1/5</span>
-                        </div>
-                        <div class="score-bar">
-                            <div class="score-fill" style="width: 20%;"></div>
-                        </div>
-                        <p class="score-desc">Low-res group interests</p>
-                    </div>
-
-                    <div class="score-item">
-                        <div class="score-header">
-                            <span class="score-label">Virality:</span>
-                            <span class="score-value">1/5</span>
-                        </div>
-                        <div class="score-bar">
-                            <div class="score-fill" style="width: 20%;"></div>
-                        </div>
-                        <p class="score-desc">Weak social loop</p>
-                    </div>
-
-                    <div class="score-item">
-                        <div class="score-header">
-                            <span class="score-label">Risk Profile:</span>
-                            <span class="score-value">1/5</span>
-                        </div>
-                        <div class="score-bar">
-                            <div class="score-fill" style="width: 20%;"></div>
-                        </div>
-                        <p class="score-desc">Dated infra, stagnant user base</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Snapchat Card -->
-            <div class="card fade-in comparison-card">
-                <h3 class="company-title">
-                    <span class="company-icon">📱</span>
-                    Snapchat
-                    <span class="company-ticker">NYESE:SNAP</span>
-                </h3>
-                <div class="company-valuation">Market Cap:$13B</div>
-                
-                <div class="metric-section">
-                    <h4 class="metric-title">
-                        <span class="metric-icon">👥</span>
-                        Business Model
-                    </h4>
-                    <p class="metric-description">Content-first social app, optimized for digital engagement + media.</p>
-                </div>
-
-                <div class="metric-section">
-                    <h4 class="metric-title">
-                        <span class="metric-icon">💰</span>
-                        Revenue Streams
-                    </h4>
-                    <p class="metric-description">Ads, AR lenses, Snap Kit, in-app purchases</p>
-                </div>
-
-                <div class="scores-section">
-                    <h4 class="metric-title">
-                        <span class="metric-icon">📊</span>
-                        Key Metrics
-                    </h4>
-                    
-                    <div class="score-item">
-                        <div class="score-header">
-                            <span class="score-label">Data Value:</span>
-                            <span class="score-value">4/5</span>
-                        </div>
-                        <div class="score-bar">
-                            <div class="score-fill" style="width: 80%;"></div>
-                        </div>
-                        <p class="score-desc">Visual, message, and location data</p>
-                    </div>
-
-                    <div class="score-item">
-                        <div class="score-header">
-                            <span class="score-label">Virality:</span>
-                            <span class="score-value">4/5</span>
-                        </div>
-                        <div class="score-bar">
-                            <div class="score-fill" style="width: 80%;"></div>
-                        </div>
-                        <p class="score-desc">High – but digital-only</p>
-                    </div>
-
-                    <div class="score-item">
-                        <div class="score-header">
-                            <span class="score-label">Risk Profile:</span>
-                            <span class="score-value">3/5</span>
-                        </div>
-                        <div class="score-bar">
-                            <div class="score-fill" style="width: 60%;"></div>
-                        </div>
-                        <p class="score-desc">Misaligned with real-world behavior</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <p style="text-align: center; font-size: 18px; color: var(--text-secondary); margin-top: 40px; font-style: italic;">
-            <strong style="color: var(--secondary-blue);">The verdict:</strong> UNI solves what they can't — complete real-world social intelligence with massive scalable revenue potential.
-        </p>
-    </section>
-
-    <section id="contact" class="contact-section">
-        <div class="contact-card">
-            <h2>🔗 Ready for the Deep Dive?</h2>
-            <p style="font-size: 18px; color: var(--text-secondary); margin-bottom: 30px;">
-                <strong style="color: var(--secondary-blue);">Isaiah Cole</strong> – CEO<br>
-                <span style="color: var(--secondary-blue);"> $1M Raise</span> | Available for intro calls immediately
-            </p>
-            <p style="font-size: 16px; color: var(--text-muted); margin-bottom: 30px;">
-                We're raising $1M on a SAFE with a $10M valuation cap, structured as a milestone-based release: $500K upfront to reach 100K users or $250K in revenue, and $500K released upon hitting that milestone.
-            </p>
-            <div class="contact-links">
-                <a href="https://docsend.com/documents/29627750" class="btn-primary" target="_blank">📊 Full Pitch Deck</a>
-                <a href="https://productdemo-tau.vercel.app/" class="btn-primary" target="_blank">🎥 Live Product Demo</a>
-                <a href="mailto:isaiah@gouni.co" class="btn-primary">✉️ Email Isaiah</a>
-            </div>
-        </div>
-    </section>
-
+        </footer>
     </div>
-    <!-- End Main Content -->
 
     <script>
-        // Password Protection
-        function checkPassword() {
-            const password = document.getElementById('passwordInput').value;
-            const errorDiv = document.getElementById('passwordError');
-            
-            if (password === 'UNIcorn') {
-                document.getElementById('passwordOverlay').style.display = 'none';
-                document.getElementById('mainContent').style.display = 'block';
-                localStorage.setItem('unicornAccess', 'true');
-            } else {
-                errorDiv.textContent = 'Incorrect password. Access denied.';
-                errorDiv.style.display = 'block';
-                document.getElementById('passwordInput').value = '';
-                document.getElementById('passwordInput').style.borderColor = '#ff4444';
-            }
-        }
+        document.addEventListener('DOMContentLoaded', () => {
+            const passwordGate = document.getElementById('password-gate');
+            const gateForm = document.getElementById('gate-form');
+            const passwordInput = document.getElementById('password-input');
+            const errorMessage = document.getElementById('error-message');
+            const mainContent = document.getElementById('main-content');
+            const gateContainer = document.querySelector('.gate-container');
 
-        // Check if already authenticated
-        if (localStorage.getItem('unicornAccess') === 'true') {
-            document.getElementById('passwordOverlay').style.display = 'none';
-            document.getElementById('mainContent').style.display = 'block';
-        }
-
-        // Allow Enter key to submit password
-        document.getElementById('passwordInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                checkPassword();
+            if (sessionStorage.getItem('isVerified') === 'true') {
+                passwordGate.style.display = 'none';
+                mainContent.classList.add('visible');
+                initializeAnimations();
             }
-        });
-        // Smooth scrolling for navigation links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
+
+            gateForm.addEventListener('submit', (e) => {
                 e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
+                const input = passwordInput.value;
+
+                if (input === 'UNIcorn') {
+                    sessionStorage.setItem('isVerified', 'true');
+                    passwordGate.classList.add('hidden');
+                    setTimeout(() => {
+                        passwordGate.style.display = 'none';
+                        mainContent.classList.add('visible');
+                        initializeAnimations();
+                    }, 500);
+                } else {
+                    errorMessage.style.visibility = 'visible';
+                    passwordInput.value = '';
+                    gateContainer.classList.add('shake');
+                    setTimeout(() => {
+                        gateContainer.classList.remove('shake');
+                    }, 500);
+                }
+            });
+
+            function initializeAnimations() {
+                const revealElements = document.querySelectorAll('.reveal');
+                if (revealElements.length > 0) {
+                    const observer = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                entry.target.classList.add('visible');
+                            }
+                        });
+                    }, {
+                        threshold: 0.1
+                    });
+                    revealElements.forEach(el => {
+                        observer.observe(el);
                     });
                 }
-            });
+            }
         });
-
-        // Scroll animations
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('.fade-in').forEach(el => {
-            observer.observe(el);
-        });
-
-        // Create subtle floating particles
-        function createParticle() {
-            const particle = document.createElement('div');
-            particle.style.cssText = `
-                position: fixed;
-                width: 2px;
-                height: 2px;
-                background: rgba(0, 204, 255, 0.5);
-                border-radius: 50%;
-                pointer-events: none;
-                z-index: -1;
-                left: ${Math.random() * 100}vw;
-                top: ${Math.random() * 100}vh;
-                animation: float ${3 + Math.random() * 4}s ease-in-out infinite;
-            `;
-            document.body.appendChild(particle);
-            
-            setTimeout(() => {
-                particle.remove();
-            }, 7000);
-        }
-
-        // Create particles periodically
-        setInterval(createParticle, 3000);
     </script>
 </body>
 </html>
